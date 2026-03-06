@@ -23,11 +23,24 @@ data.forEach(p=>{
 if(!p.piece.toLowerCase().includes(search)) return
 
 table.innerHTML+=`
+
 <tr>
 <td>${p.gare}</td>
-<td>${p.piece}</td>
-<td>${p.qte}</td>
-<td>${p.date}</td>
+<td>${p.nom}</td>
+
+<td>
+<button onclick="moins(${i})">➖</button>
+${p.qte}
+<button onclick="plus(${i})">➕</button>
+</td>
+
+<td>${p.dateModif} - ${p.user}</td>
+
+<td>
+<button onclick="edit(${i})">✏️</button>
+<button onclick="del(${i})">🗑️</button>
+</td>
+
 </tr>
 `
 
@@ -113,3 +126,30 @@ window.print()
 document.getElementById("search").addEventListener("input",display)
 
 loadData()
+function plus(i){
+
+data.pieces[i].qte++
+
+data.pieces[i].dateModif=getDate()
+data.pieces[i].user=currentUser
+
+save()
+refresh()
+
+}
+
+function moins(i){
+
+if(data.pieces[i].qte>0){
+
+data.pieces[i].qte--
+
+data.pieces[i].dateModif=getDate()
+data.pieces[i].user=currentUser
+
+save()
+refresh()
+
+}
+
+}
