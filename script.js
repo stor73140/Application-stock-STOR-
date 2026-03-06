@@ -1,4 +1,4 @@
-const API_URL="COLLER_URL_GOOGLE_SCRIPT"
+const API_URL="https://script.google.com/macros/s/AKfycbz79_X96_YdtznLHBQ_H1SNjOxtmnFBo8Li-DknNec63fRroLnW34E_D6bixDiDpg19/exec"
 
 let data=[]
 
