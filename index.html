@@ -1,45 +1,136 @@
 <!DOCTYPE html>
 <html lang="fr">
-
 <head>
 
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>Stock RM</title>
+<title>Stock pièces RM</title>
 
-<link rel="stylesheet" href="style.css">
-<link rel="manifest" href="manifest.json">
+<style>
+
+body{
+font-family:Arial;
+background:#f4f4f4;
+padding:10px;
+margin:0;
+}
+
+h1{text-align:center}
+
+.box,form{
+background:white;
+padding:15px;
+border-radius:8px;
+margin-bottom:15px;
+}
+
+input,select,button{
+padding:12px;
+margin:5px 0;
+width:100%;
+font-size:16px;
+}
+
+button{
+background:#2c7be5;
+color:white;
+border:none;
+border-radius:6px;
+}
+
+table{
+width:100%;
+border-collapse:collapse;
+background:white;
+}
+
+th,td{
+border:1px solid #ccc;
+padding:8px;
+}
+
+th{background:#eee}
+
+.hidden{display:none}
+
+.tabs{
+display:flex;
+gap:5px;
+margin-bottom:10px;
+}
+
+.tabs button{
+flex:1;
+}
+
+</style>
 
 </head>
 
 <body>
 
-<h1>Stock Remontées Mécaniques</h1>
+<div id="loginBox" class="box">
 
-<input id="search" placeholder="🔎 Rechercher une pièce">
+<h2>Choisir utilisateur</h2>
+
+<select id="userSelect"></select>
+
+<input id="newUser" placeholder="Ajouter utilisateur">
+
+<button onclick="addUser()">Ajouter</button>
+<button onclick="deleteUser()">Supprimer</button>
+
+<button onclick="enterApp()">Entrer</button>
+
+</div>
+
+<div id="app" class="hidden">
+
+<h1>Stock pièces RM</h1>
+
+<div class="tabs">
+<button onclick="showTab('stock')">Stock</button>
+<button onclick="showTab('general')">Stock général</button>
+</div>
+
+<div id="stockTab">
 
 <div class="box">
 
-<h2>Ajouter pièce</h2>
+<h2>Ajouter une gare</h2>
 
-<input id="pieceNom" placeholder="Nom pièce">
-<input id="pieceQte" type="number" placeholder="Quantité">
-
-<select id="gareSelect">
-<option>Gare A</option>
-<option>Gare B</option>
-<option>Gare C</option>
-</select>
-
-<button onclick="addPiece()">Ajouter</button>
+<form onsubmit="addGare(event)">
+<input id="gareNom" placeholder="Nom gare" required>
+<button>Ajouter</button>
+</form>
 
 </div>
 
 <div class="box">
 
-<button onclick="exportExcel()">📊 Export Excel</button>
-<button onclick="exportPDF()">📄 Export PDF</button>
+<h2>Ajouter pièce</h2>
+
+<form onsubmit="addPiece(event)">
+
+<input list="pieceList" id="pieceNom" placeholder="Nom pièce" required>
+<datalist id="pieceList"></datalist>
+
+<input id="pieceQte" type="number" placeholder="Quantité" required>
+
+<select id="gareSelect"></select>
+
+<input type="hidden" id="editIndex">
+
+<button>Enregistrer</button>
+
+</form>
+
+</div>
+
+<div class="box">
+
+<input id="searchInput" placeholder="🔎 Rechercher pièce">
 
 </div>
 
@@ -50,7 +141,8 @@
 <th>Gare</th>
 <th>Pièce</th>
 <th>Qté</th>
-<th>Date</th>
+<th>Maj</th>
+<th></th>
 </tr>
 </thead>
 
@@ -58,7 +150,15 @@
 
 </table>
 
-<h2>Stock général</h2>
+</div>
+
+<div id="generalTab" class="hidden">
+
+<div class="box">
+
+<input id="searchGeneral" placeholder="🔎 Rechercher pièce">
+
+</div>
 
 <table>
 
@@ -69,11 +169,245 @@
 </tr>
 </thead>
 
-<tbody id="generalTable"></tbody>
+<tbody id="tableGeneral"></tbody>
 
 </table>
 
-<script src="script.js"></script>
+</div>
+
+</div>
+
+<script>
+
+let currentUser=""
+
+let data=JSON.parse(localStorage.getItem("stock"))||{
+gares:[],
+pieces:[],
+users:["Admin"]
+}
+
+function save(){
+localStorage.setItem("stock",JSON.stringify(data))
+}
+
+function getDate(){
+return new Date().toLocaleString("fr-FR")
+}
+
+function refreshUsers(){
+
+userSelect.innerHTML=""
+
+data.users.forEach(u=>{
+userSelect.innerHTML+=`<option>${u}</option>`
+})
+
+}
+
+function addUser(){
+
+let u=newUser.value
+
+if(u && !data.users.includes(u)){
+
+data.users.push(u)
+
+save()
+
+refreshUsers()
+
+}
+
+newUser.value=""
+
+}
+
+function deleteUser(){
+
+let u=userSelect.value
+
+data.users=data.users.filter(x=>x!==u)
+
+save()
+
+refreshUsers()
+
+}
+
+function enterApp(){
+
+currentUser=userSelect.value
+
+loginBox.classList.add("hidden")
+app.classList.remove("hidden")
+
+refresh()
+
+}
+
+function showTab(tab){
+
+stockTab.classList.add("hidden")
+generalTab.classList.add("hidden")
+
+if(tab==="stock") stockTab.classList.remove("hidden")
+if(tab==="general") generalTab.classList.remove("hidden")
+
+}
+
+function refresh(){
+
+gareSelect.innerHTML=""
+table.innerHTML=""
+pieceList.innerHTML=""
+
+data.gares.forEach(g=>{
+gareSelect.innerHTML+=`<option>${g}</option>`
+})
+
+let piecesUnique=[...new Set(data.pieces.map(p=>p.nom))]
+
+piecesUnique.forEach(p=>{
+pieceList.innerHTML+=`<option value="${p}">`
+})
+
+let search=searchInput.value?searchInput.value.toLowerCase():""
+
+data.pieces.forEach((p,i)=>{
+
+if(!p.nom.toLowerCase().includes(search)) return
+
+table.innerHTML+=`
+
+<tr>
+<td>${p.gare}</td>
+<td>${p.nom}</td>
+<td>${p.qte}</td>
+<td>${p.dateModif} - ${p.user}</td>
+<td>
+<button onclick="edit(${i})">✏️</button>
+<button onclick="del(${i})">🗑️</button>
+</td>
+</tr>
+
+`
+
+})
+
+buildGeneralStock()
+
+}
+
+function buildGeneralStock(){
+
+tableGeneral.innerHTML=""
+
+let stock={}
+
+data.pieces.forEach(p=>{
+
+if(!stock[p.nom]) stock[p.nom]=0
+
+stock[p.nom]+=Number(p.qte)
+
+})
+
+let search=searchGeneral.value?searchGeneral.value.toLowerCase():""
+
+Object.keys(stock).forEach(piece=>{
+
+if(!piece.toLowerCase().includes(search)) return
+
+tableGeneral.innerHTML+=`
+
+<tr>
+<td>${piece}</td>
+<td>${stock[piece]}</td>
+</tr>
+
+`
+
+})
+
+}
+
+function addGare(e){
+
+e.preventDefault()
+
+if(!data.gares.includes(gareNom.value)){
+
+data.gares.push(gareNom.value)
+
+save()
+refresh()
+
+}
+
+gareNom.value=""
+
+}
+
+function addPiece(e){
+
+e.preventDefault()
+
+const i=editIndex.value
+
+const obj={
+nom:pieceNom.value,
+qte:Number(pieceQte.value),
+gare:gareSelect.value,
+dateModif:getDate(),
+user:currentUser
+}
+
+if(i===""){
+data.pieces.push(obj)
+}else{
+data.pieces[i]=obj
+}
+
+editIndex.value=""
+pieceNom.value=""
+pieceQte.value=""
+
+save()
+refresh()
+
+}
+
+function edit(i){
+
+let p=data.pieces[i]
+
+pieceNom.value=p.nom
+pieceQte.value=p.qte
+gareSelect.value=p.gare
+editIndex.value=i
+
+}
+
+function del(i){
+
+if(confirm("Supprimer ?")){
+
+data.pieces.splice(i,1)
+
+save()
+refresh()
+
+}
+
+}
+
+searchInput.addEventListener("input",refresh)
+searchGeneral.addEventListener("input",buildGeneralStock)
+
+refreshUsers()
+
+</script>
 
 </body>
 </html>
