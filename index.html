@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Stock RM</title>
+
+<link rel="stylesheet" href="style.css">
+<link rel="manifest" href="manifest.json">
+
+</head>
+
+<body>
+
+<h1>Stock Remontées Mécaniques</h1>
+
+<input id="search" placeholder="🔎 Rechercher une pièce">
+
+<div class="box">
+
+<h2>Ajouter pièce</h2>
+
+<input id="pieceNom" placeholder="Nom pièce">
+<input id="pieceQte" type="number" placeholder="Quantité">
+
+<select id="gareSelect">
+<option>Gare A</option>
+<option>Gare B</option>
+<option>Gare C</option>
+</select>
+
+<button onclick="addPiece()">Ajouter</button>
+
+</div>
+
+<div class="box">
+
+<button onclick="exportExcel()">📊 Export Excel</button>
+<button onclick="exportPDF()">📄 Export PDF</button>
+
+</div>
+
+<table>
+
+<thead>
+<tr>
+<th>Gare</th>
+<th>Pièce</th>
+<th>Qté</th>
+<th>Date</th>
+</tr>
+</thead>
+
+<tbody id="table"></tbody>
+
+</table>
+
+<h2>Stock général</h2>
+
+<table>
+
+<thead>
+<tr>
+<th>Pièce</th>
+<th>Total</th>
+</tr>
+</thead>
+
+<tbody id="generalTable"></tbody>
+
+</table>
+
+<script src="script.js"></script>
+
+</body>
+</html>
